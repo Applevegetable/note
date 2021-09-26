@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-func main() {
+func main4() {
 	const distance = 62100000 //距离火星距离
 
 	fmt.Println("Spaceline            Days    Trip type     Price")

@@ -200,3 +200,256 @@ func main() {
 }
 ```
 
+## P7 实数
+
+两种浮点数类型
+
+默认是float64
+
+- 64位的浮点类型
+- 占用8字节内存
+- 类似于double
+
+float32
+
+- 占用4字节内存
+- 精度比float64低
+- 有时叫做单精度
+
+```go
+var Pi  float64 = 63.92
+```
+
+![image-20210926100244758](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926100244758.png)
+
+显示小数位数
+
+```go
+fmt.Printf("%.4f",third)
+//小数位有4位
+fmt.Printf("%4.2f",third)
+//小数点2位，整体4位，包括小数点
+```
+
+![image-20210926101207111](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926101207111.png)
+
+使用0代替空格进行填充
+
+![image-20210926101242454](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926101242454.png)
+
+浮点数不适合用于金融类计算，
+
+为了尽量最小化舍入错误，建议先做乘法，再做除法
+
+作业：
+
+```go
+
+/*
+随机地将五分镍币（0.05美元）、一角硬币（0.10美元）和 25 美分硬币（0.25美元）放入一个空的储蓄罐，直到里面至少有20美元。
+每次存款后显示存钱罐的余额
+并以适当的宽度和精度格式化*/
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	
+)
+
+func main(){
+
+	
+	const money=20
+	//var coin float64
+	var res  float64
+	for res<money{
+		num:=rand.Intn(3)
+		switch num{
+		case 0:
+			res+=0.05
+			fmt.Printf("余额为%4.2f\n",res)
+		
+	case 1:
+		res+=0.10
+		fmt.Printf("余额为%4.2f\n",res)
+	case 2:
+		res+=0.25
+		fmt.Printf("余额为%4.2f\n",res)
+
+		}
+	}
+	
+}
+```
+
+## P8 整数
+
+整数类型，包括有符号和无符号的
+
+int 和uint是与操作系统有关系的，其他的都是无关的
+
+**•而 int 和 uint 是针对目标设备优化的类型：**
+
+•在树莓派 2、比较老的移动设备上，int 和 uint 都是 32 位的。
+
+•在比较新的计算机上，int 和 uint 都是 64 位的。
+
+**打印数据类型  %T**
+
+•Go 语言里，在数前面加上 0x 前缀，就可以用十六进制的形式来表示数值。
+
+•打印十六进制的数，使用 %x 格式化动词
+
+![image-20210926105646341](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926105646341.png)
+
+作业：
+
+```go
+/*
+随机地将五分镍币（0.05美元）、一角硬币（0.10美元）和 25 美分硬币（0.25美元）放入一个空的储蓄罐，直到里面至少有20美元。
+每次存款后显示存钱罐的余额
+使用整数来追踪美分而不是美元
+并以适当的宽度和精度格式化*/
+package main
+
+import (
+	"fmt"
+	"math/rand"
+)
+
+func main() {
+
+	const money = 2000
+
+	//var coin float64
+	var res int
+	for res < money {
+		num := rand.Intn(3)
+		switch num {
+		case 0:
+			res += 5
+			fmt.Printf("$%4.2f\n", float64(res)/100)
+
+		case 1:
+			res += 10
+			fmt.Printf("$%4.2f\n", float64(res)/100)
+		case 2:
+			res += 25
+			fmt.Printf("$%4.2f\n", float64(res)/100)
+
+		}
+	}
+
+}
+```
+
+## P9 比较大的数
+
+如果没有为指数形式的数值指定类型的话，那么Go会将它视为float64类型，
+
+![image-20210926111200420](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926111200420.png)
+
+
+
+在Go语言中，常量是可以无类型
+
+•尽管 Go 编译器使用 big 包来处理无类型的数值常量，但是常量和 big.Int 的值是不能互换的。
+
+使用big.Int来显示整数
+
+```go
+distance:= new (big.Int)
+distance.SetString("24000000000000000000",10)
+```
+
+•尽管 Go 编译器使用 big 包来处理无类型的数值常量，但是常量和 big.Int 的值是不能互换的。
+
+## P10 多语言文本
+
+![image-20210926134825016](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926134825016.png)
+
+![image-20210926135134140](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926135134140.png)
+
+**自定义类型别名**
+
+```go
+type rune = int32
+```
+
+![image-20210926135448729](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926135448729.png)
+
+打印字符本身，使用%c
+
+打印字符对应的code points,使用%v,会自动推断其为rune类型
+
+
+
+**string字符串本身是不可以改变的**
+
+```go
+var str string ="dsahdgas"
+str[2]="x"//错误
+```
+
+• len 返回 message 所占的 byte 数。
+
+•Go 有很多内置函数，它们不需要 import
+
+如果是英语，返回的就是正确的长度，其他语言返回的字节数与长度不符合，因为Utf-8是可变长度的编码，汉字等会占据更大的空间
+
+
+
+
+
+## P11 类型转换
+
+![image-20210926145908032](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926145908032.png)
+
+![image-20210926145921309](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926145921309.png)
+
+![image-20210926154550426](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926154550426.png)
+
+**fmt.Sprintf()**不会在控制台进行输出，转换到一个变量中进行输出
+
+![image-20210926160232487](C:\Users\hanyanbo\AppData\Roaming\Typora\typora-user-images\image-20210926160232487.png)
+
+像printf()一样，可以传入一个变量，%v等
+
+**某些语言里，经常把 1 和 0 当作 true 和 false，但是在 Go 里面不行。**
+
+```go
+
+/*
+写一个程序，把字符串转化为布尔类型：
+“true”, “yes”, “1” 是 true
+“false”, “no”, “0” 是 false
+针对其它值，显示错误信息
+*/
+package main
+
+import (
+	"fmt"
+)
+
+func main(){
+	var str string
+	var res bool
+	str="1"
+	switch str {
+		case "1", "true", "yes":
+			res=true
+			fmt.Print(res)
+		case "0", "false", "no":
+			res=false
+			fmt.Print(res)
+		default:
+			fmt.Printf("this is wrong")
+	}
+}
+```
+
+## P13 函数
+
+小写字母开头的函数不能被其他包调用，必须是大写字母开头的包
+
