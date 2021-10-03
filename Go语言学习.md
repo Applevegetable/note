@@ -451,5 +451,29 @@ func main(){
 
 ## P13 函数
 
-小写字母开头的函数不能被其他包调用，必须是大写字母开头的包
+小写字母开头的函数不能被其他包调用，必须是**大写字母**开头的包
+
+## P14 方法
+
+**声明新类型 type celsius float64**
+
+极大地提高代码的可读性和可靠性
+
+
+
+Go语言中提供了方法，但是没有提供类和对象
+
+每个方法可以有多个参数，但是只能有一个接收者
+
+![image-20210926235728460](C:\Users\nature\AppData\Roaming\Typora\typora-user-images\image-20210926235728460.png)
+
+```go
+func (c celsius) kelvin() kelvin {
+
+  return kelvin(c + 273.15)
+
+}
+
+//理解：receiver接收者是调用这个方法的类型，方法
+```
 
