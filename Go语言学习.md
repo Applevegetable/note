@@ -477,3 +477,400 @@ func (c celsius) kelvin() kelvin {
 //理解：receiver接收者是调用这个方法的类型，方法
 ```
 
+## P15 一等函数
+
+闭包就是由于匿名函数封闭并包围作用域中的变量而得名的
+
+匿名函数就是函数名的函数
+
+函数名可以直接传递进去
+
+
+
+
+
+
+
+## P17数组
+
+数组是一种固定长度且有序的元素集合
+
+![image-20211001120552202](C:\Users\nature\AppData\Roaming\Typora\typora-user-images\image-20211001120552202.png)
+
+•如果 Go 编译器在编译时未能发现越界错误，那么程序在运行时会出现 panic（例子）
+
+•Panic 会导致程序崩溃
+
+![image-20211001210508851](C:\Users\nature\AppData\Roaming\Typora\typora-user-images\image-20211001210508851.png)
+
+range首先编译数组下标，之后遍历数组内的元素
+
+## P18切片
+
+切片不会导致数组被修改，只是创建了指向数组的一个窗口
+
+slice是左闭右开的[0:4] 0,1,2,3
+
+...表示可以自动推断出长度
+
+直接声明切片
+
+```go
+dwarfs:=[]string ={"ceres","pluto","haumea","Makemake","Eris"}
+```
+
+切片类型的写法
+
+```go
+[]string
+```
+
+切片虽然有长度，但是这个长度与数组的长度不一样，它不是类型的一部分。可以将任意长度的切片传递给函数
+
+**所有的range遍历第一个值都是下标，第二个值才是元素**
+
+## P19更大的切片
+
+append函数
+
+```
+append(切片，添加的元素)
+```
+
+容量和长度
+
+如果切片底层的数组比切片大，那么就说该切片还有容量可以增长
+
+#### 容量的理解
+
+```go
+slice1 := []string{"1", "2", "3", "4", "5"}
+fmt.Println(len(slice1),cap(slice1))
+slice2:=append(slice1,"6","8","8")
+fmt.Println(len(slice2),cap(slice2))
+fmt.Println(slice2)
+slice3:=append(slice2,"9","10","12")
+slice3[6]="7"
+fmt.Println(slice2)
+fmt.Println(slice3)
+fmt.Println(len(slice3),cap(slice3))
+	
+	
+5 5
+8 10//新加入元素的个数超过底层的容量时，会新创建一个切片，容量是之前的两倍
+[1 2 3 4 5 6 8 8]
+[1 2 3 4 5 6 8 8]
+[1 2 3 4 5 6 7 8 9 10 12]
+11 20	
+	
+```
+
+- **当新加入的元素是小于底层的容量的两倍时，会将容量改为两倍，即扩大一倍**
+- 如果超过两倍，那么新的容量就是两次元素个数的加和
+- 如果新加入元素之后容量还有剩余，那么就会共享底层的数组，进行修改，
+- 如果没有剩余，就会新创建底层数组，
+
+#### 三索引切分操作
+
+```go
+terrestrial：=plants[0:4:4]//从0-4，容量也是4
+会创建新的切片
+
+```
+
+#### 使用make函数对切片实现预分配
+
+```go
+dwafs:=make([]string,0,10)//代表长度是0，容量是10
+dwafs:=make([]string,10)//代表长度是10，容量是10,长度和容量一致，用一个参数来代替
+//make创建出来的元素都是对应的零值
+```
+
+#### 声明可变参数函数
+
+为了声明像Printf和append这样能够接受可变数量的实参的可变参数函数，我们需要在该函数的最后一个形参前面加上省略号...
+
+通过省略号可以展开切片中的多个元素
+
+#### GO语言中...的用法
+
+1. 让Go编译器计算复合字面量中数组包含的元素个数
+2. 创建可变参数函数的最后一个形参，使它可以将0个或者多个实参捕获为切片
+3. 将切片中的元素展开为传递给函数的多个参数
+
+## P20 MAP
+
+![image-20211003141744516](C:\Users\nature\AppData\Roaming\Typora\typora-user-images\image-20211003141744516.png)
+
+#### 逗号与ok语法
+
+```go
+	tempture := map[string]int{
+		"earth": 15,
+		"mars":  16,
+	}
+
+	if moon, ok := tempture["moon"]; ok {
+		fmt.Print(moon)
+		
+	}else{
+		fmt.Print()
+	}
+```
+
+**用来判断是否存在键是否存在，如果存在ok被设置为true,注意有分号**
+
+#### 映射不会被复制
+
+数组在被赋值给新变量或者传递至函数或方法的时候都会创建对应的副本，但是映射不会，映射是直接对应的指针，指向的是相同的底层数据
+
+#### 使用make预先分配空间
+
+```go
+temperature:=make(map[float64]int,8)//8代表有8个键值对
+//使用make函数创建的新映射的初始长度总为0
+```
+
+**Go语言{}内必须使用，结尾**
+
+## P22 结构
+
+**声明结构体**
+
+```go
+type location struct{
+		a int 
+		b string
+}
+```
+
+可以复用
+
+**初始化**
+
+```go
+var s location //进行初始化
+opp:=location{a:10,b:"sg"}//字面值初始化
+opp1:=location{10,"sg"}//按照字段声明的顺序初始化
+```
+
+**打印struct**
+
+![image-20211003222000026](C:\Users\nature\AppData\Roaming\Typora\typora-user-images\image-20211003222000026.png)
+
+```go
+%v 打印出的是{10,"sg"}
+%+v:打印出的是{a:10,b:"sg"}
+```
+
+**结构体切片**
+
+```go
+	type location struct{
+		name string
+		lat  float64
+		long float64
+	}
+	locations:=[]location{
+		{name: "Baa",lat: -312,long: 29.2},
+		{name: "Col",lat: 213.2,long: 212},
+		{name: "Scs",lat: 212.3,long: 231},
+	}
+```
+
+## P23-Go语言没有Class
+
+**Go没有class,没有对象，也没有继承**
+
+**但是提供了struct和方法，通过两者的组合就可以实现面向对象**
+
+ 
+
+#### **构造函数的起名方式**
+
+```go
+newType//不可以被其他包引用
+NewType//可以被外部引用
+```
+
+## P24组合与继承
+
+Go只有组合没有继承
+
+#### 结构嵌入
+
+```
+type report struct{
+	sol int 
+	tempture
+	loccation//不给定字段名，只给定类型
+}
+```
+
+可以将任意类型嵌入结构
+
+## P25 接口
+
+接口关注于类型可以做什么，而不是存储了什么
+
+接口通过列举类型必须满足的一组方法来进行声明
+
+在Go语言中，不需要显示声明接口
+
+```go
+var t interface{
+	talk() string
+}
+type talker interface{
+	talk() string
+}
+```
+
+接口类型的名称通常以-er作为后缀
+
+Go语言的接口是随时可以改变的，隐式实现
+
+## P27指针
+
+&	取地址，但是无法获得字符串、数值、布尔 字面值的地址
+
+•&42，&“hello”这些都会导致编译器报错
+
+\* 操作符与 & 的作用相反，它用来解引用，提供内存地址指向的值。
+
+Go语言有指针，也强调安全性，不会出现野指针和迷途指针
+
+ C 语言中的内存地址可以通过例如 address++ 这样的指针运算进行操作，但是在 Go 里面不允许这种不安全操作
+
+**•将 * 放在类型前面表示声明指针类型**
+
+**•将 * 放在变量前面表示解引用操作**
+
+两个指针变量持有相同的内存地址，那么它们就是相等的
+
+
+
+Go为结构体和数组实现了指针的自动解引用，但是对切片和映射map没有类似操作
+
+Go语言的地址操作符&不仅可以获取结构的内存地址，还可以获取结构中指定字段的内存地址
+
+映射和切片都是隐式指针
+
+## P29-nil
+
+尝试解引用一个nil指针会导致程序崩溃
+
+## P30错误处理
+
+error是一种类型
+
+defer，延迟，Go可以确保所有defered的动作可以在函数返回前执行
+
+在函数返回前肯定会触发defer
+
+defer并不是专门做错误处理的
+
+defer可以消除必须时刻惦记执行资源释放的负担
+
+errors.New()函数生成一个错误，errors.New("this is a new error~")
+
+自定义错误类型命名以Error结尾
+
+panic不常使用
+
+使用panic会执行所有defer动作
+
+如果defer中调用了recover，那么panic就会停止，程序就会继续运行。
+
+## P31goroutine
+
+独立的任务叫做goroutine
+
+启动goroutine使用关键字go
+
+通道可以在多个goroutine之间安全的传值
+
+创建通道,并指定其传输数据的类型
+
+```
+c:=make(chan int)
+```
+
+使用左箭头操作符<-向通道发送值或者从通道接受值
+
+​	•	向通道发送值：c <- 99
+
+​	•	从通道接收值：r := <- c
+
+•发送操作会等待直到另一个 goroutine 尝试对该通道进行接收操作为止。
+
+​	•执行发送操作的 goroutine 在等待期间将无法执行其它操作
+
+​	•未在等待通道操作的 goroutine仍然可以继续自由的运行
+
+•执行接收操作的 goroutine 将等待直到另一个 goroutine 尝试向该通道进行发送操作为止。
+
+#### select处理多个通道
+
+等待不同类型的值
+
+time.After返回一个通道 ，该通道在指定时间后会接收到一个值 
+
+```
+select {
+	case c:=<-channel:
+	case b<-c
+}
+```
+
+即使已经停止等待goroutine，但是只要main函数还没有返回，仍在运行的goroutine将会 继续占用内存
+
+select在不包含任何goroutine的情况下会永远等下去
+
+如果不适用make初始化通道，那么通道变量的值就是nil
+
+•对 nil 通道进行发送或接收不会引起 panic，但会导致永久阻塞。
+
+•对 nil 通道执行 close 函数，那么会引起 panic
+
+•nil 通道的用处：
+
+•对于包含 select 语句的循环，如果不希望每次循环都等待 select 所涉及的所有通道，那么可以先将某些通道设为 nil，等到发送值准备就绪之后，再将通道变成一个非 nil 值并执行发送操作。
+
+#### 阻塞和死锁
+
+•当 goroutine 在等待通道的发送或接收时，我们就说它被阻塞了。
+
+•除了 goroutine 本身占用少量的内存外，被阻塞的 goroutine 并不消耗任何其它资源。
+
+•goroutine 静静的停在那里，等待导致其阻塞的事情来解除阻塞。
+
+•当一个或多个 goroutine 因为某些永远无法发生的事情被阻塞时，我们称这种情况为死锁。而出现死锁的程序通常会崩溃或挂起。  
+
+•Go 允许在没有值可供发送的情况下通过 close 函数关闭通道
+
+•例如 close(c)
+
+•通道被关闭后无法写入任何值，如果尝试写入将引发 panic。
+
+•尝试读取被关闭的通道会获得与通道类型对应的零值。
+
+•注意：如果循环里读取一个已关闭的通道，并没检查通道是否关闭，那么该循环可能会一直运转下去，耗费大量 CPU 时间
+
+•执行以下代码可得知通道是否被关闭：
+
+•v, ok := <- c
+
+## P35并发状态
+
+互斥锁有两个方法Lock()和Unlock()
+
+```
+import "sync"
+var mu sync.Mutex
+func main(){
+	mu.Lock()
+	def mu.Unlock()
+}
+```
+
