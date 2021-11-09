@@ -165,50 +165,7 @@ kubectl version --client
 systemctl enable kubelet && systemctl start kubelet
 ```
 
-
-
-## 集群初始化（只在master节点操作)
-
-```
-kubeadm init --apiserver-advertise-address=116.36.185.25 --image-repository registry.aliyuncs.com/google_containers  --kubernetes-version v1.18.0  --service-cidr=10.1.0.0/16 --pod-network-cidr=10.244.0.0/16
-```
-
-pod-network-cdir
-
-指明 pod 网络可以使用的 IP 地址段。如果设置了这个参数，控制平面将会为每一个节点自动分配 CIDRs。
-
---service-cidr string   默认值："10.96.0.0/12"
-
-为服务的虚拟 IP 地址另外指定 IP 地址段
-
-都是默认地址
-
-#### 出错时可以使用
-
-```
-kubeadm reset
-```
-
-初始化时会出现问题，主要是代理的原因
-
-```bash
-This error is likely caused by:
-		- The kubelet is not running
-		- The kubelet is unhealthy due to a misconfiguration of the node in some way (required cgroups disabled)
-```
-
-
-
-### 初始完毕获得token和密钥
-
-```
-systemctl status kubelet
-journalctl -xeu kebelet
-```
-
-
-
-
+## &集群初始化（只在master节点操作)
 
 ```
 kubeadm init \
@@ -217,32 +174,168 @@ kubeadm init \
   --kubernetes-version v1.18.0 \
   --service-cidr=10.1.0.0/16 \
   --pod-network-cidr=10.244.0.0/16
+```
+
+
+
+
+
+```
+kubeadm init \
+  --apiserver-advertise-address=192.168.0.175  \
+  --image-repository registry.aliyuncs.com/google_containers \
+  --kubernetes-version v1.18.0 \
+  --service-cidr=10.1.0.0/16 \
+  --pod-network-cidr=10.244.0.0/16
+```
+
+```bash
+#坑位：使用公网IP地址在华为云上会出现bug,所以使用的是内网IP,插眼
+```
+
+```
+--apiserver-advertise-addresss是master节点的IP地址
+--image-repository是使用阿里镜像
+--kubernetes-version指定拉取的镜像
+```
+
+###########################################
+
+#### 出错时可以使用
+
+```
+kubeadm reset
+```
+
+###########################################
+
+## 初始完毕获得token和密钥(保存)
+
+```
+kubeadm join 192.168.0.175:6443 --token wrdrup.mu2cay5w1g7no75p \
+    --discovery-token-ca-cert-hash sha256:c869724300e708240d16b09a3b53295cab13a015ee2f931b162b766fc1254f08
+```
+
+### 备份配置（master节点）
+
+```
+mkdir -p $HOME/.kube
+cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+#这里输入yes指令
+chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+
+
+## 集群网络部署（flannel)
+
+### 部署flannel(master节点)
+
+```
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+
+### 集群加入节点（node节点）
+
+```
+kubeadm join 192.168.0.175:6443 --token wrdrup.mu2cay5w1g7no75p \
+    --discovery-token-ca-cert-hash sha256:c869724300e708240d16b09a3b53295cab13a015ee2f931b162b766fc1254f08
+```
+
+
+
+## 验证集群(master节点)
+
+```
+kubectl get nodes
+```
+
+可以看到其他的两个节点已经加入
+
+
+
+## 集群测试（master节点）
+
+在kubernetes集群中创建一个pod,验证是否正常工作
+
+```
+kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80 --type=NodePort
+kubectl get pod,srv
+```
+
+**访问地址就是节点的地址/port  ,**
+
+```
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes   ClusterIP   10.1.0.1     <none>        443/TCP        18h
+service/nginx        NodePort    10.1.33.98   <none>        80:30002/TCP   12s
 
 ```
 
-解决方案：
+
+
+## 安装dashboard(master节点)
 
 ```
-#加标签
-#docker images查看镜像，其中pause镜像有问题
-docker tag registry.aliyuncs.com/google_containers/pause:3.2 k8s.gcr.io/pause:3.2
+wget https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+```
+
+### 换源
+
+找到image位置，将k8s.grc.io换位lizhenliang
+
+```
+lizhenliang/kubernetes-dashboard-amd64:v1.10.1
+```
+
+运行
+
+```
+kubectl apply -f kubernetes-dashboard.yaml
+```
+
+运行
+
+```bash
+kubectl get pod -A -o wide |grep dash
+kubectl get svc -A -o wide |grep dash
+```
+
+查看服务情况
+
+```
+kubectl -n kube-system describe pod
+```
+
+查看docker启动情况
+
+```
+docker ps
+```
+
+## 创建登陆用户
+
+创建用户
+
+```
+kubectl create serviceaccount dashboard-admin -n kube-system
+kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kube-system:dashboard-admin
+```
+
+生成登陆token
+
+```
+kubectl describe secrets -n kube-system $(kubectl -n kube-system get secret | awk '/dashboard-admin/{print $1}')
 ```
 
 ```
-images=(  
-    kube-apiserver:v1.18.0
-    kube-controller-manager:v1.18.0
-    kube-scheduler:v1.18.0
-    kube-proxy:v1.18.0
-    pause:3.2
-    etcd:3.4.3-0
-    coredns:1.6.7
-)
-
-for imageName in ${images[@]} ; do
-    docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName
-    docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName k8s.gcr.io/$imageName
-    docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName
-done
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IjBWX2F6ODk3eXU0cU9JUmh0MVNDelk1eGxnbUE1V3NVRFB4aEZVbEVfeVEifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJkYXNoYm9hcmQtYWRtaW4tdG9rZW4tejd4anIiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGFzaGJvYXJkLWFkbWluIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiZTQ2YzE5MGYtNmEwNy00OTdkLWIyMDktYTkyY2FkNzExYTM4Iiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmRhc2hib2FyZC1hZG1pbiJ9.cJQEwEiXoq4LbY4q70fZr7sM-_tGyoBuF7wt8UfNXHgnW6Nm2SvggLXj-MrmAjoBELKDNh8rJNDqTX4Eji-X9Fi_uYGeRIibaCCj93j2ZfDIjuI35JxGJxatlueuGnsXkikArHud-4fsO3gnUG_85E_Bxk_TXr4T0OeNaku08fTwv7NNbDsc--G5-EvmSu2Qs6CimeAThPzLKvP9CNIjAxAslTjJ3fWVQXIb9Nnx9TKaU_Juji7gZoWnG1ATfBG39rnIZNSL-6AK3Q_cA1J5yxZ13VdAalxUO8cVWFRxMJqWulbvoaB24V8yWN8wtH28blpL1XkFwUCiCvrrCQvKMA
 ```
+
+
+
+
+
+
 
